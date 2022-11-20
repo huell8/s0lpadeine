@@ -1,0 +1,10 @@
+# igonre everything
+/*
+# except for:
+!.gitattributes
+!.gitignore
+!README.md
+!LICENSE
+!src
+!etc
+
