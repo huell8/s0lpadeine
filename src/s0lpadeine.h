@@ -22,15 +22,6 @@ unsigned screen_width, screen_height;
 //                   - the # in the example screen is drawn by calling: draw_point(1, 0); and draw_point(1, 1);
 //
 
-struct vec2d {
-  unsigned x, y;
-};
-
-void test() {
-  struct vec2d x = {1, 2};
-  return;
-}
-
 void initialize(unsigned width, unsigned height) {
   // memory allocation for the screen contents
   screen = (bool**)malloc(width * sizeof(bool*));
@@ -57,26 +48,41 @@ void clear(bool v) {
   return;
 }
 
-// manipulate single point functions:
-void draw_point(unsigned x, unsigned y) {
-  // set x, y cell to on
-  if(x < screen_width && y < screen_height)
-  screen[x][y] = 1;  
-  return;
-}
-void draw_point_fast(unsigned x, unsigned y, bool v) {
-  //use if you are super sure x and y wont be to big
-  screen[x][y] = v;  
-  return;
-}
-void set_point(unsigned x, unsigned y, bool v) {
+void draw_point(unsigned x, unsigned y, bool v) {
+  // set pint (x, y) to v
   if(x < screen_width && y < screen_height)
     screen[x][y] = v;
   return;
 }
+void draw_point_fast(unsigned x, unsigned y, bool v) {
+  // set point (x, y) to v
+  // use only if you are * s u p e r * sure x and y wont be to big
+  screen[x][y] = v;
+  return;
+}
 
-//void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1) {
-//}
+void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, bool v) {
+// the idea is to divide the line into smaller segments of length equal to one cells' size
+  // and then for each point draw its aproximation
+  //
+  // make the line fit on the screen:
+  if(x0 >= screen_width)  x0 = screen_width  - 1;
+  if(x1 >= screen_width)  x1 = screen_width  - 1;
+  if(y0 >= screen_height) y0 = screen_height - 1;
+  if(y1 >= screen_height) y1 = screen_height - 1;
+  if(x0 == x1 && y0 == y1) draw_point(x0, y0, v); //so we dont divide by 0
+  //       distance = max(abs(x0-x1), abs(y0-y1)) - number of smaller segments minus one
+  unsigned distance = (x0>x1?x0-x1:x1-x0)>(y0>y1?y0-y1:y1-y0)?(x0>x1?x0-x1:x1-x0):(y0>y1?y0-y1:y1-y0);
+  for(unsigned step = 0; step <= distance; step++) {
+    float t = (float)step/(float)distance;
+    // draw_point_fast(round(lerp(x0, x1, t)), round(lerp(y0, y1, t)), v)
+    // calculate interpolated values:
+    //                           standard interplation            adding 0.5f to round correctly
+    unsigned lerpx = (unsigned)((float)x0 * (1.0f - t) + t * (float)x1 + 0.5f);
+    unsigned lerpy = (unsigned)((float)y0 * (1.0f - t) + t * (float)y1 + 0.5f);
+    draw_point_fast((unsigned)lerpx, (unsigned)lerpy, v);
+  }
+}
 
 void refresh() {
   // draws contents of screen to the actual screen
