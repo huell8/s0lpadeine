@@ -25,7 +25,7 @@ unsigned screen_width, screen_height;
 
 void initialize(unsigned width, unsigned height) {
   // memory allocation for the screen contents
-  screen = (bool**)malloc(width * sizeof(bool));
+  screen = (bool**)malloc(width * sizeof(bool*));
   for(unsigned i = 0; i < width; i++)
     screen[i] = (bool*)malloc(height * sizeof(bool));
   screen_width = width; screen_height = height;
@@ -37,27 +37,16 @@ void initialize(unsigned width, unsigned height) {
 
 void stop() {
   // always call it and the end of your program
-  free(screen);
+  //free(screen);
   printf("\e[?25h"); // show cursor
   return;
 }
 
 void clear(bool v) {
-  for(unsigned x = 0; x < screen_width; x++) {
-    for(unsigned y = 0; y < screen_height; y++) {
-      printf("no coredump for x: %d and y: %d\n", x, y);
+  for(unsigned x = 0; x < screen_width; x++)
+    for(unsigned y = 0; y < screen_height; y++)
       screen[x][y] = v;
-    }
-  }
   return;
-}
-void test() {
-  printf("running test:\n");
-  printf("width: %d, height: %d\n", screen_width, screen_height);
-  screen[screen_width-1][screen_height-1] = 1;
-  printf("no coredump 1!\n");
-  clear(0);
-  printf("no coredump 3!\n");
 }
 
 void refresh() {
@@ -94,12 +83,15 @@ void refresh() {
 }
 
 void test_animation() {
+  clear(0);
   while(true) {
-    for(unsigned x = 0; x < screen_width; x++)
-      for(unsigned y = 0; y < screen_height; y++)
+    for(unsigned x = 0; x < screen_width; x++) {
+      for(unsigned y = 0; y < screen_height; y++) {
         screen[x][y] = !screen[x][y];
-    sleep(0.5);
-    refresh();
+        sleep(1);
+        refresh();
+      }
+    }
   }
   return;
 }

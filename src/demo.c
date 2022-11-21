@@ -3,7 +3,7 @@
 
 int main(void) {
   initialize(15, 15);
-  test();
+  test_animation();
   stop();
   return 0;
 }
