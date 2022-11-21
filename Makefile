@@ -9,4 +9,5 @@ all:
 clean:
 	${RM} -r target
 run:
+	make all
 	./target/${TARGET}
