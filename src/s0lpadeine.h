@@ -22,6 +22,14 @@ unsigned screen_width, screen_height;
 //                   - the # in the example screen is drawn by calling: draw_point(1, 0); and draw_point(1, 1);
 //
 
+struct vec2d {
+  unsigned x, y;
+};
+
+void test() {
+  struct vec2d x = {1, 2};
+  return;
+}
 
 void initialize(unsigned width, unsigned height) {
   // memory allocation for the screen contents
@@ -37,7 +45,7 @@ void initialize(unsigned width, unsigned height) {
 
 void stop() {
   // always call it and the end of your program
-  //free(screen);
+  free(screen);
   printf("\e[?25h"); // show cursor
   return;
 }
@@ -48,6 +56,27 @@ void clear(bool v) {
       screen[x][y] = v;
   return;
 }
+
+// manipulate single point functions:
+void draw_point(unsigned x, unsigned y) {
+  // set x, y cell to on
+  if(x < screen_width && y < screen_height)
+  screen[x][y] = 1;  
+  return;
+}
+void draw_point_fast(unsigned x, unsigned y, bool v) {
+  //use if you are super sure x and y wont be to big
+  screen[x][y] = v;  
+  return;
+}
+void set_point(unsigned x, unsigned y, bool v) {
+  if(x < screen_width && y < screen_height)
+    screen[x][y] = v;
+  return;
+}
+
+//void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1) {
+//}
 
 void refresh() {
   // draws contents of screen to the actual screen

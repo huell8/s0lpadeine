@@ -2,8 +2,13 @@
 #include "s0lpadeine.h"
 
 int main(void) {
-  initialize(15, 15);
-  test_animation();
+  initialize(128, 128);
+  clear(0);
+  test();
+  refresh();
+  draw_point(0, 0); 
+  draw_point(127, 127);
+  refresh(); 
   stop();
   return 0;
 }
