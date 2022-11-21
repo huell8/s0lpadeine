@@ -80,7 +80,7 @@ void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, bool v) {
     //                           standard interplation            adding 0.5f to round correctly
     unsigned lerpx = (unsigned)((float)x0 * (1.0f - t) + t * (float)x1 + 0.5f);
     unsigned lerpy = (unsigned)((float)y0 * (1.0f - t) + t * (float)y1 + 0.5f);
-    draw_point_fast((unsigned)lerpx, (unsigned)lerpy, v);
+    draw_point_fast(lerpx, lerpy, v);
   }
 }
 
@@ -114,19 +114,5 @@ void refresh() {
     printf("\n");
   }
   fflush(stdout); // printf correctly and all the things
-  return;
-}
-
-void test_animation() {
-  clear(0);
-  while(true) {
-    for(unsigned x = 0; x < screen_width; x++) {
-      for(unsigned y = 0; y < screen_height; y++) {
-        screen[x][y] = !screen[x][y];
-        sleep(1);
-        refresh();
-      }
-    }
-  }
   return;
 }

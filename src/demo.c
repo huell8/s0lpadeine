@@ -4,12 +4,16 @@
 int main(void) {
   initialize(128, 128);
   clear(0);
-  draw_point(0, 0, 1);
-  draw_point(127, 127, 1);
-  draw_line(10, 10, 117, 117, 1);
-  draw_line(100, 34, 34, 100, 1);
-  draw_line(30, 30, 80, 42, 1);
-  refresh(); 
+  // border
+  draw_line(0, 0, 0, 127, 1);
+  draw_line(0, 0, 127, 0, 1);
+  draw_line(0, 127, 127, 127, 1);
+  draw_line(127, 0, 127, 127, 1);
+  // diagonals
+  draw_line(0, 0, 127, 127, 1);
+  draw_line(0, 127, 127, 0, 1);
+
+  refresh();
   stop();
   return 0;
 }
