@@ -2,11 +2,14 @@
 #include "s0lpadeine.h"
 
 // leave one of the following uncommented:
-#define SCREEN_TEST
-//#define TRIANGLES_DEMO
+//#define SCREEN_TEST
+#define DEMO_3D
 
 int main(void) {
-  initialize(128, 128);
+  if(!init_screen(128, 128)) {
+    printf("error init_screen()");
+    return 1;
+  }
   clear(0);
  #if defined(SCREEN_TEST)
   // border
@@ -17,14 +20,16 @@ int main(void) {
   // diagonals
   draw_line(0, 0, 127, 127, 1);
   draw_line(0, 127, 127, 0, 1);
-#elif defined(TRIANGLES_DEMO)
-  // triangles demo
-  draw_triangle(64, 64, 74, 79, 74, 49, 1);
-  draw_triangle(64, 64, 54, 79, 54, 49, 1);
-  draw_triangle(64, 64, 59, 0, 68, 0, 1);
-#endif
-
   refresh();
+#elif defined(DEMO_3D)
+  if(!init_mesh("etc/cube.mesh")) {
+    printf("error init_mesh()");
+    return 1;
+  }
+
+
+
+#endif
   stop();
   return 0;
 }

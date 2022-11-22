@@ -7,6 +7,13 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+struct vec3d {
+  float x, y, z;
+};
+struct tri {
+  struct vec3d v[3];
+};
+
 bool** screen; // screen contents
 unsigned screen_width, screen_height;
 // how screen is defined:
@@ -22,7 +29,11 @@ unsigned screen_width, screen_height;
 //                   - the # in the example screen is drawn by calling: draw_point(1, 0); and draw_point(1, 1);
 //
 
-void initialize(unsigned width, unsigned height) {
+struct tri* mesh;
+unsigned mesh_count;
+FILE* mesh_file;
+
+bool init_screen(unsigned width, unsigned height) {
   // memory allocation for the screen contents
   screen = (bool**)malloc(width * sizeof(bool*));
   for(unsigned i = 0; i < width; i++)
@@ -31,12 +42,30 @@ void initialize(unsigned width, unsigned height) {
   // ansi magic
   printf("\e[?25l"); // hide cursor
   printf("\e[2J");   // erase entire screen
-  return;
+  return true;
+}
+
+bool init_mesh(char* path) {
+  mesh_file = fopen(path, "r");
+  if(mesh_file == NULL)
+    return false;
+  unsigned line_count;
+  fscanf(mesh_file, "%u ", &line_count);
+  mesh = malloc(line_count * sizeof(*mesh));
+  float in[9];
+  for(unsigned i = 0; i < line_count; i++) {
+    fscanf(mesh_file, "%f %f %f %f %f %f %f %f %f", &in[0], &in[1], &in[2], &in[3], &in[4], &in[5], &in[6], &in[7], &in[8]);
+    printf("%f %f %f %f %f %f %f %f %f\n", in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7], in[8]);
+  }
+
+  return true;
 }
 
 void stop() {
   // always call it and the end of your program
+
   free(screen);
+  if(mesh_file != NULL) fclose(mesh_file);
   printf("\e[?25h"); // show cursor
   return;
 }
@@ -54,6 +83,7 @@ void draw_point(unsigned x, unsigned y, bool v) {
     screen[x][y] = v;
   return;
 }
+
 void draw_point_fast(unsigned x, unsigned y, bool v) {
   // set point (x, y) to v
   // use only if you are * s u p e r * sure x and y wont be to big
@@ -65,12 +95,7 @@ void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, bool v) {
 // the idea is to divide the line into smaller segments of length equal to one cells' size
   // and then for each point draw its aproximation
   //
-  // make the line fit on the screen:
-  if(x0 >= screen_width)  x0 = screen_width  - 1;
-  if(x1 >= screen_width)  x1 = screen_width  - 1;
-  if(y0 >= screen_height) y0 = screen_height - 1;
-  if(y1 >= screen_height) y1 = screen_height - 1;
-  if(x0 == x1 && y0 == y1) draw_point(x0, y0, v); //so we dont divide by 0
+   if(x0 == x1 && y0 == y1) draw_point(x0, y0, v); //so we dont divide by 0
   //       distance = max(abs(x0-x1), abs(y0-y1)) - number of smaller segments minus one
   unsigned distance = (x0>x1?x0-x1:x1-x0)>(y0>y1?y0-y1:y1-y0)?(x0>x1?x0-x1:x1-x0):(y0>y1?y0-y1:y1-y0);
   for(unsigned step = 0; step <= distance; step++) {
@@ -80,7 +105,7 @@ void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, bool v) {
     //                           standard interplation            adding 0.5f to round correctly
     unsigned lerpx = (unsigned)((float)x0 * (1.0f - t) + t * (float)x1 + 0.5f);
     unsigned lerpy = (unsigned)((float)y0 * (1.0f - t) + t * (float)y1 + 0.5f);
-    draw_point_fast(lerpx, lerpy, v);
+    draw_point(lerpx, lerpy, v);
   }
 }
 
