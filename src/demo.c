@@ -23,7 +23,6 @@ int main(void) {
   draw_triangle(64, 64, 54, 79, 54, 49, 1);
   draw_triangle(64, 64, 59, 0, 68, 0, 1);
 #endif
-
   refresh();
   stop();
   return 0;

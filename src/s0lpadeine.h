@@ -92,6 +92,15 @@ void draw_triangle(unsigned x0, unsigned y0, unsigned x1, unsigned y1, unsigned 
 	return;
 }
 
+void draw_square(unsigned x0, unsigned y0, unsigned x1, unsigned y1, bool v) {	
+	// just call draw_line() 4 times with two points
+	draw_line(x0, y0, x0, y1, v);
+	draw_line(x0, y1, x1, y1, v);
+	draw_line(x1, y1, x1, y0, v);
+	draw_line(x1, y0, x0, y0, v);
+}	
+
+
 void refresh() {
   // draws contents of screen to the actual screen
   printf("\e[H"); // move cursor to home position
