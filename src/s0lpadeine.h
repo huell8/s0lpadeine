@@ -84,6 +84,14 @@ void draw_line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, bool v) {
   }
 }
 
+void draw_triangle(unsigned x0, unsigned y0, unsigned x1, unsigned y1, unsigned x2, unsigned y2, bool v) {
+	// just call draw_line() 3 times 
+	draw_line(x0, y0, x1, y1, v);
+	draw_line(x1, y1, x2, y2, v);
+	draw_line(x2, y2, x0, y0, v);
+	return;
+}
+
 void refresh() {
   // draws contents of screen to the actual screen
   printf("\e[H"); // move cursor to home position
