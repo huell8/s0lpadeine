@@ -39,8 +39,8 @@ unsigned screen_width, screen_height;
 //                   - the # in the example screen is drawn by calling: draw_point(1, 0); and draw_point(1, 1);
 //
 
-extern mesh meshCube;
-extern mat4x4 matProj;
+mesh meshCube;
+mat4x4 projection_mat;
 extern mat4x4 matRotZ, matRotX;
 
 bool init_screen(unsigned width, unsigned height) {
@@ -55,18 +55,24 @@ bool init_screen(unsigned width, unsigned height) {
   return true;
 }
 
+bool init_projection_mat(float near, float far, float fov) {
+  float fAspectRatio = (float)screen_height / (float)screen_width;
+  float fovRad = 1.0f / tanf(fov * 0.5f / 180.0f * 3.14159f);
+
+  projection_mat.m[0][0] = fAspectRatio * fovRad;
+  projection_mat.m[1][1] = fovRad;
+  projection_mat.m[2][2] = far / (far - near);
+  projection_mat.m[3][2] = (-far * near) / (far - near);
+  projection_mat.m[2][3] = 1.0f;
+  projection_mat.m[3][3] = 0.0f;
+  return true;
+}
+
 void stop() {
   // always call it and the end of your program
   free(screen);
   printf("\e[?25h"); // show cursor
   return;
-}
-
-unsigned get_screen_width() {
-  return screen_width;
-}
-unsigned get_screen_height() {
-  return screen_height;
 }
 
 void clear(bool v) {
@@ -116,7 +122,7 @@ void draw_triangle(unsigned x0, unsigned y0, unsigned x1, unsigned y1, unsigned 
 	return;
 }
 
-void MultiplyMatrixVector(vec3d &i, vec3d &o, mat4x4 &m) {
+void multiply_matrix_vector(vec3d &i, vec3d &o, mat4x4 &m) {
   o.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + m.m[3][0];
   o.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + m.m[3][1];
   o.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
@@ -129,16 +135,15 @@ void MultiplyMatrixVector(vec3d &i, vec3d &o, mat4x4 &m) {
 void project() {
   for (auto tri : meshCube.tris) {
     triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
-
       // Rotate in Z-Axis
-      MultiplyMatrixVector(tri.p[0], triRotatedZ.p[0], matRotZ);
-      MultiplyMatrixVector(tri.p[1], triRotatedZ.p[1], matRotZ);
-      MultiplyMatrixVector(tri.p[2], triRotatedZ.p[2], matRotZ);
+      multiply_matrix_vector(tri.p[0], triRotatedZ.p[0], matRotZ);
+      multiply_matrix_vector(tri.p[1], triRotatedZ.p[1], matRotZ);
+      multiply_matrix_vector(tri.p[2], triRotatedZ.p[2], matRotZ);
 
       // Rotate in X-Axis
-      MultiplyMatrixVector(triRotatedZ.p[0], triRotatedZX.p[0], matRotX);
-      MultiplyMatrixVector(triRotatedZ.p[1], triRotatedZX.p[1], matRotX);
-      MultiplyMatrixVector(triRotatedZ.p[2], triRotatedZX.p[2], matRotX);
+      multiply_matrix_vector(triRotatedZ.p[0], triRotatedZX.p[0], matRotX);
+      multiply_matrix_vector(triRotatedZ.p[1], triRotatedZX.p[1], matRotX);
+      multiply_matrix_vector(triRotatedZ.p[2], triRotatedZX.p[2], matRotX);
 
       // Offset into the screen
       triTranslated = triRotatedZX;
@@ -147,20 +152,20 @@ void project() {
       triTranslated.p[2].z = triRotatedZX.p[2].z + 3.0f;
 
       // Project triangles from 3D --> 2D
-      MultiplyMatrixVector(triTranslated.p[0], triProjected.p[0], matProj);
-      MultiplyMatrixVector(triTranslated.p[1], triProjected.p[1], matProj);
-      MultiplyMatrixVector(triTranslated.p[2], triProjected.p[2], matProj);
+      multiply_matrix_vector(triTranslated.p[0], triProjected.p[0], projection_mat);
+      multiply_matrix_vector(triTranslated.p[1], triProjected.p[1], projection_mat);
+      multiply_matrix_vector(triTranslated.p[2], triProjected.p[2], projection_mat);
 
       // Scale into view
       triProjected.p[0].x += 1.0f; triProjected.p[0].y += 1.0f;
       triProjected.p[1].x += 1.0f; triProjected.p[1].y += 1.0f;
       triProjected.p[2].x += 1.0f; triProjected.p[2].y += 1.0f;
-      triProjected.p[0].x *= 0.5f * (float)get_screen_width();
-      triProjected.p[0].y *= 0.5f * (float)get_screen_height();
-      triProjected.p[1].x *= 0.5f * (float)get_screen_width();
-      triProjected.p[1].y *= 0.5f * (float)get_screen_height();
-      triProjected.p[2].x *= 0.5f * (float)get_screen_width();
-      triProjected.p[2].y *= 0.5f * (float)get_screen_height();
+      triProjected.p[0].x *= 0.5f * (float)screen_width;
+      triProjected.p[0].y *= 0.5f * (float)screen_height;
+      triProjected.p[1].x *= 0.5f * (float)screen_width;
+      triProjected.p[1].y *= 0.5f * (float)screen_height;
+      triProjected.p[2].x *= 0.5f * (float)screen_width;
+      triProjected.p[2].y *= 0.5f * (float)screen_height;
 
       // Rasterize triangle
       draw_triangle(triProjected.p[0].x, triProjected.p[0].y,

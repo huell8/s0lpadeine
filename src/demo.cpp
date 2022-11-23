@@ -2,8 +2,8 @@
 #include <cmath>
 using namespace std;
 
-mesh meshCube;
-mat4x4 matProj;
+extern mesh meshCube;
+extern mat4x4 matProj;
 mat4x4 matRotZ, matRotX;
 float fTheta;
 
@@ -37,6 +37,7 @@ void frame(float frame_time) {
 
 int main() {
   init_screen(128, 128);
+  init_projection_mat(0.1f, 1000.0f, 90.0f);
   meshCube.tris = {
     // SOUTH
     { 0.0f, 0.0f, 0.0f,    0.0f, 1.0f, 0.0f,    1.0f, 1.0f, 0.0f },
@@ -63,19 +64,6 @@ int main() {
     { 1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 0.0f,    1.0f, 0.0f, 0.0f },
   };
 
-  // Projection Matrix
-  float fNear = 0.1f;
-  float fFar = 1000.0f;
-  float fFov = 90.0f;
-  float fAspectRatio = (float)get_screen_height() / (float)get_screen_width();
-  float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
-
-  matProj.m[0][0] = fAspectRatio * fFovRad;
-  matProj.m[1][1] = fFovRad;
-  matProj.m[2][2] = fFar / (fFar - fNear);
-  matProj.m[3][2] = (-fFar * fNear) / (fFar - fNear);
-  matProj.m[2][3] = 1.0f;
-  matProj.m[3][3] = 0.0f;
 
   for(unsigned i = 0; i < 100000; i++) {
     frame(0.001f);
