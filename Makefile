@@ -1,14 +1,15 @@
-CC=gcc
+CC=g++
 RM=rm -f
-CFLAGS=-Wall --std=c17
-TARGET=demo.c
+CFLAGS=-Wall --std=c++17
+TARGET=demo.cpp
+OUT=output
 
 all:
 	mkdir -p target
-	${CC} ${CFLAGS} src/${TARGET} -o target/${TARGET}
+	${CC} ${CFLAGS} src/${TARGET} -o target/${OUT}
 clean:
 	${RM} -r target
 run:
 	clear
 	make all
-	./target/${TARGET}
+	./target/${OUT}

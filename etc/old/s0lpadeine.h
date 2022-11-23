@@ -4,24 +4,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
-#include <vector>
-#include <cmath>
 
-struct vec3d{
+struct vec3d {
   float x, y, z;
 };
-
-struct triangle{
-  vec3d p[3];
-};
-
-struct mesh {
-  std::vector<triangle> tris;
-};
-
-struct mat4x4 {
-  float m[4][4] = { 0 };
+struct tri {
+  struct vec3d v[3];
 };
 
 bool** screen; // screen contents
@@ -39,9 +29,9 @@ unsigned screen_width, screen_height;
 //                   - the # in the example screen is drawn by calling: draw_point(1, 0); and draw_point(1, 1);
 //
 
-extern mesh meshCube;
-extern mat4x4 matProj;
-extern mat4x4 matRotZ, matRotX;
+struct tri* mesh;
+unsigned mesh_count;
+FILE* mesh_file;
 
 bool init_screen(unsigned width, unsigned height) {
   // memory allocation for the screen contents
@@ -55,18 +45,29 @@ bool init_screen(unsigned width, unsigned height) {
   return true;
 }
 
-void stop() {
-  // always call it and the end of your program
-  free(screen);
-  printf("\e[?25h"); // show cursor
-  return;
+bool init_mesh(char* path) {
+  mesh_file = fopen(path, "r");
+  if(mesh_file == NULL)
+    return false;
+  unsigned line_count;
+  fscanf(mesh_file, "%u ", &line_count);
+  mesh = malloc(line_count * sizeof(*mesh));
+  float in[9];
+  for(unsigned i = 0; i < line_count; i++) {
+    fscanf(mesh_file, "%f %f %f %f %f %f %f %f %f", &in[0], &in[1], &in[2], &in[3], &in[4], &in[5], &in[6], &in[7], &in[8]);
+    printf("%f %f %f %f %f %f %f %f %f\n", in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7], in[8]);
+  }
+
+  return true;
 }
 
-unsigned get_screen_width() {
-  return screen_width;
-}
-unsigned get_screen_height() {
-  return screen_height;
+void stop() {
+  // always call it and the end of your program
+
+  free(screen);
+  if(mesh_file != NULL) fclose(mesh_file);
+  printf("\e[?25h"); // show cursor
+  return;
 }
 
 void clear(bool v) {
@@ -114,61 +115,6 @@ void draw_triangle(unsigned x0, unsigned y0, unsigned x1, unsigned y1, unsigned 
 	draw_line(x1, y1, x2, y2, v);
 	draw_line(x2, y2, x0, y0, v);
 	return;
-}
-
-void MultiplyMatrixVector(vec3d &i, vec3d &o, mat4x4 &m) {
-  o.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + m.m[3][0];
-  o.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + m.m[3][1];
-  o.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
-  float w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
-  if (w != 0.0f) {
-    o.x /= w; o.y /= w; o.z /= w;
-  }
-}
-
-void project() {
-  for (auto tri : meshCube.tris) {
-    triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
-
-      // Rotate in Z-Axis
-      MultiplyMatrixVector(tri.p[0], triRotatedZ.p[0], matRotZ);
-      MultiplyMatrixVector(tri.p[1], triRotatedZ.p[1], matRotZ);
-      MultiplyMatrixVector(tri.p[2], triRotatedZ.p[2], matRotZ);
-
-      // Rotate in X-Axis
-      MultiplyMatrixVector(triRotatedZ.p[0], triRotatedZX.p[0], matRotX);
-      MultiplyMatrixVector(triRotatedZ.p[1], triRotatedZX.p[1], matRotX);
-      MultiplyMatrixVector(triRotatedZ.p[2], triRotatedZX.p[2], matRotX);
-
-      // Offset into the screen
-      triTranslated = triRotatedZX;
-      triTranslated.p[0].z = triRotatedZX.p[0].z + 3.0f;
-      triTranslated.p[1].z = triRotatedZX.p[1].z + 3.0f;
-      triTranslated.p[2].z = triRotatedZX.p[2].z + 3.0f;
-
-      // Project triangles from 3D --> 2D
-      MultiplyMatrixVector(triTranslated.p[0], triProjected.p[0], matProj);
-      MultiplyMatrixVector(triTranslated.p[1], triProjected.p[1], matProj);
-      MultiplyMatrixVector(triTranslated.p[2], triProjected.p[2], matProj);
-
-      // Scale into view
-      triProjected.p[0].x += 1.0f; triProjected.p[0].y += 1.0f;
-      triProjected.p[1].x += 1.0f; triProjected.p[1].y += 1.0f;
-      triProjected.p[2].x += 1.0f; triProjected.p[2].y += 1.0f;
-      triProjected.p[0].x *= 0.5f * (float)get_screen_width();
-      triProjected.p[0].y *= 0.5f * (float)get_screen_height();
-      triProjected.p[1].x *= 0.5f * (float)get_screen_width();
-      triProjected.p[1].y *= 0.5f * (float)get_screen_height();
-      triProjected.p[2].x *= 0.5f * (float)get_screen_width();
-      triProjected.p[2].y *= 0.5f * (float)get_screen_height();
-
-      // Rasterize triangle
-      draw_triangle(triProjected.p[0].x, triProjected.p[0].y,
-                    triProjected.p[1].x, triProjected.p[1].y,
-                    triProjected.p[2].x, triProjected.p[2].y,
-                    1);
-  }
-  return;
 }
 
 void refresh() {
